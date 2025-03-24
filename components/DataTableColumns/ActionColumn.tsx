@@ -23,8 +23,8 @@ import {
 import { MoreHorizontal, Pencil, Trash } from "lucide-react";
 import toast from "react-hot-toast";
 import Link from "next/link";
-import { deleteSaving } from "@/actions/savings";
 import { deleteUser } from "@/actions/users";
+import { deleteRoom } from "@/actions/rooms";
 
 type ActionColumnProps = {
   row: any;
@@ -43,14 +43,20 @@ export default function ActionColumn({
   async function handleDelete() {
     try {
       if (model === "saving") {
-        const res = await deleteSaving(id);
+        // const res = await deleteSaving(id);
+        // if (res?.ok) {
+        //   window.location.reload();
+        // }
+        // toast.success(`${model} Deleted Successfully`);
+      } else if (model === "user") {
+        const res = await deleteUser(id);
         if (res?.ok) {
           window.location.reload();
         }
         toast.success(`${model} Deleted Successfully`);
-      } else if (model === "user") {
-        const res = await deleteUser(id);
-        if (res?.ok) {
+      }else if (model === "room") {
+        const res = await deleteRoom(id);
+        if (res?.success) {
           window.location.reload();
         }
         toast.success(`${model} Deleted Successfully`);

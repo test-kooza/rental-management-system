@@ -1,4 +1,6 @@
-import { Role, User } from "@prisma/client";
+import { SystemRole, User } from "@prisma/client";
+import type { Notification as PrismaNotification } from "@prisma/client"
+
 
 export type CategoryProps = {
   title: string;
@@ -13,15 +15,19 @@ export type SavingProps = {
   userId: string;
   paymentDate: any;
 };
-export type UserProps = {
-  name: string;
-  firstName: string;
-  lastName: string;
-  phone: string;
-  image: string;
+export interface UserProps {
   email: string;
   password: string;
-};
+  name: string;
+  image?: string;
+}
+export interface UserProp {
+  id:string;
+  email: string;
+  name: string;
+  image?: string;
+  role:SystemRole
+}
 export type LoginProps = {
   email: string;
   password: string;
@@ -39,7 +45,7 @@ export interface RoleFormData {
 }
 
 export interface UserWithRoles extends User {
-  roles: Role[];
+  // roles: Role[];
 }
 
 export interface RoleOption {
@@ -50,7 +56,7 @@ export interface RoleOption {
 export interface UpdateUserRoleResponse {
   error: string | null;
   status: number;
-  data: UserWithRoles | null;
+  // data: UserWithRoles | null;
 }
 
 export interface RoleResponse {
@@ -61,3 +67,27 @@ export interface RoleResponse {
   createdAt: Date;
   updatedAt: Date;
 }
+import type { Booking, Property, Address } from "@prisma/client"
+
+export interface BookingWithProperty extends Booking {
+  property: Property & {
+    address?: Address | null
+  }
+}
+
+export interface BookingStats {
+  totalSpent: string
+  bookingCount: number
+  activeBookings: number
+  nextCheckIn: {
+    date: string | null
+    propertyName: string | null
+  }
+  nextCheckOut: {
+    date: string | null
+    daysLeft: number | null
+    propertyName: string | null
+  }
+}
+
+export type Notification = PrismaNotification

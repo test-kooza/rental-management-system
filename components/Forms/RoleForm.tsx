@@ -7,16 +7,16 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { RoleFormData } from "@/types/types";
 import toast from "react-hot-toast";
-import { Role } from "@prisma/client";
+// import { Role } from "@prisma/client";
 import { permissions } from "@/config/permissions";
 import FormFooter from "./FormFooter";
 import TextInput from "../FormInputs/TextInput";
 import { CustomCheckbox } from "../FormInputs/CustomCheckbox";
-import { createRole, updateRole } from "@/actions/roles";
+// import { createRole, updateRole } from "@/actions/roles";
 
 type RoleFormProps = {
   editingId?: string;
-  initialData?: Role | null;
+  initialData?:any;
 };
 
 export default function RoleForm({ editingId, initialData }: RoleFormProps) {
@@ -38,20 +38,20 @@ export default function RoleForm({ editingId, initialData }: RoleFormProps) {
 
   async function saveRole(data: RoleFormData) {
     try {
-      setLoading(true);
-      const result = editingId
-        ? await updateRole(editingId, data)
-        : await createRole(data);
+      // setLoading(true);
+      // const result = editingId
+      //   ? await updateRole(editingId, data)
+      //   : await createRole(data);
 
-      if (!result.success) {
-        toast.error(result.error);
-        return;
-      }
+      // if (!result.success) {
+      //   toast.error(result.error);
+      //   return;
+      // }
 
-      toast.success(
-        editingId ? "Role updated successfully!" : "Role created successfully!"
-      );
-      router.push("/dashboard/users/roles");
+      // toast.success(
+      //   editingId ? "Role updated successfully!" : "Role created successfully!"
+      // );
+      // router.push("/dashboard/users/roles");
       router.refresh();
     } catch (error) {
       toast.error("Something went wrong!");

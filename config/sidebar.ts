@@ -1,32 +1,39 @@
-// config/sidebar.ts
 import {
   BaggageClaim,
   BarChart2,
   BarChart4,
   Book,
+  BookA,
   Cable,
   CircleDollarSign,
+  CircleSlashIcon,
   FolderTree,
+  Heart,
   Home,
+  House,
+  HouseIcon,
+  Key,
   LucideIcon,
   Presentation,
   Settings,
   Users,
 } from "lucide-react";
 
+export type role = "USER" | "HOST" | "ADMIN";
+
 export interface ISidebarLink {
   title: string;
   href?: string;
   icon: LucideIcon;
   dropdown: boolean;
-  permission: string; // Required permission to view this item
+  allowedRoles: role[]; 
   dropdownMenu?: MenuItem[];
 }
 
 type MenuItem = {
   title: string;
   href: string;
-  permission: string; // Required permission to view this menu item
+  allowedRoles: role[];
 };
 
 export const sidebarLinks: ISidebarLink[] = [
@@ -35,118 +42,111 @@ export const sidebarLinks: ISidebarLink[] = [
     href: "/dashboard",
     icon: Home,
     dropdown: false,
-    permission: "dashboard.read",
+    allowedRoles: ["USER", "HOST", "ADMIN"], // Everyone can view dashboard
   },
   {
     title: "Users",
     icon: Users,
     href: "/dashboard/users",
     dropdown: true,
-    permission: "users.read",
+    allowedRoles: ["ADMIN"], // Only ADMIN can manage users
     dropdownMenu: [
       {
         title: "Users",
         href: "/dashboard/users",
-        permission: "users.read",
+        allowedRoles: ["ADMIN"],
       },
-      {
-        title: "Roles",
-        href: "/dashboard/users/roles",
-        permission: "roles.read",
-      },
-      {
-        title: "Change Password",
-        href: "/dashboard/change-password",
-        permission: "roles.read",
-      },
-      {
-        title: "Profile",
-        href: "/dashboard/profile",
-        permission: "roles.read",
-      },
+   
+    
     ],
   },
   {
-    title: "Inventory",
+    title: "Property Categories",
     icon: BaggageClaim,
     dropdown: true,
-    href: "/dashboard/inventory/products",
-    permission: "products.read",
+    href: "/dashboard/property-category",
+    allowedRoles: [ "ADMIN"],
     dropdownMenu: [
       {
         title: "Categories",
-        href: "/dashboard/inventory/categories",
-        permission: "categories.read",
+        href: "/dashboard/property-category",
+        allowedRoles: [ "ADMIN"],
       },
-      {
-        title: "Products",
-        href: "/dashboard/inventory/products",
-        permission: "products.read",
-      },
+      
     ],
   },
+  
   {
-    title: "Sales",
-    icon: CircleDollarSign,
-    dropdown: true,
-    href: "/dashboard/sales",
-    permission: "sales.read",
-    dropdownMenu: [
-      {
-        title: "Sales",
-        href: "/dashboard/sales",
-        permission: "sales.read",
-      },
-      {
-        title: "Customers",
-        href: "/dashboard/sales/customers",
-        permission: "customers.read",
-      },
-    ],
+    title: "Financials",
+    icon: CircleSlashIcon,
+    dropdown: false,
+    href: "/dashboard/financials",
+    allowedRoles: ["HOST", "ADMIN"], 
   },
   {
-    title: "Blogs",
+    title: "Bookings",
+    icon: BookA,
+    dropdown: false,
+    href: "/dashboard/bookings",
+    allowedRoles: ["USER"], 
+  },
+  {
+    title: "Reservations",
     icon: Book,
     dropdown: false,
-    href: "/dashboard/blogs",
-    permission: "blogs.read",
+    href: "/dashboard/reservation-overview",
+    allowedRoles: ["HOST", "ADMIN"], 
   },
   {
-    title: "Orders",
-    href: "/dashboard/orders",
-    icon: BarChart2,
+    title: "Properties",
+    icon: House,
     dropdown: false,
-    permission: "orders.read",
+    href: "/dashboard/properties",
+    allowedRoles: ["ADMIN" , "HOST"], 
+  },
+  {
+    title: "Rooms",
+    icon: HouseIcon,
+    dropdown: false,
+    href: "/dashboard/rooms",
+    allowedRoles: ["ADMIN" , "HOST"], 
+  },
+
+  {
+    title: "WishList",
+    href: "/wishlist",
+    icon: Heart,
+    dropdown: false,
+    allowedRoles: ["ADMIN"  , "USER" , "HOST"],
+  },
+  {
+    title: "Notifications",
+    href: "/dashboard/notifications",
+    icon: Heart,
+    dropdown: false,
+    allowedRoles: ["ADMIN"  , "USER" , "HOST"],
+  },
+ 
+  {
+    title: "Reports",
+    icon: BarChart4,
+    dropdown: true,
+    href: "/dashboard",
+    allowedRoles: ["HOST", "ADMIN"], 
+  },
+  {
+    title: "Change password",
+    icon: Key,
+    dropdown: true,
+    href: "/change-password",
+    allowedRoles: ["HOST", "ADMIN" , "USER"], 
+   
   },
   {
     title: "Settings",
     href: "/dashboard/settings",
     icon: Settings,
     dropdown: false,
-    permission: "settings.read",
-  },
-  {
-    title: "Reports",
-    icon: BarChart4,
-    dropdown: true,
-    href: "/dashboard/reports/products",
-    permission: "reports.read",
-    dropdownMenu: [
-      {
-        title: "Product Report",
-        href: "/dashboard/reports/products",
-        permission: "reports.read",
-      },
-      {
-        title: "Inventory Report",
-        href: "/dashboard/reports/inventory",
-        permission: "reports.read",
-      },
-      {
-        title: "Customers Report",
-        href: "/dashboard/reports/customers",
-        permission: "reports.read",
-      },
-    ],
+    allowedRoles: ["ADMIN"  , "USER" , "HOST"],
   },
 ];

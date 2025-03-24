@@ -18,13 +18,13 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Category } from "@prisma/client";
+// import { Category } from "@prisma/client";
 import { getNormalDate } from "@/lib/getNormalDate";
 
 export default function CustomDataTable({
   categories,
 }: {
-  categories: Category[];
+  categories: any;
 }) {
   console.log(categories);
   return (
@@ -46,7 +46,7 @@ export default function CustomDataTable({
             </TableRow>
           </TableHeader>
           <TableBody>
-            {categories.map((category) => {
+            {categories.map((category:any) => {
               const date = getNormalDate(category.createdAt);
               return (
                 <TableRow key={category.id}>

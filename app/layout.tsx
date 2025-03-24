@@ -1,24 +1,37 @@
-import type { Metadata } from "next";
-import { Rethink_Sans } from "next/font/google";
+import { Manrope } from "next/font/google"; 
 import "./globals.css";
 import { Toaster } from "react-hot-toast";
 import Providers from "@/components/Providers";
-// import FooterBanner from "@/components/Footer";
-const inter = Rethink_Sans({ subsets: ["latin"], display: "swap" });
+import { Metadata } from "next";
+import ScrollToTop from "@/components/frontend/ScrollToTop";
+import ReactQueryProvider from "@/providers/ReactQueryProvider";
+
+const manrope = Manrope({
+  subsets: ["latin"],
+  variable: "--font-manrope",
+  display: "swap",
+});
 
 export const metadata: Metadata = {
-  title: "Ronix Fit Savers",
-  description: "Join Ronix Savings Group",
+  title: "Airbnb Rental Management",
+  description: "Airbnb Rental management for managing rentals",
 };
+
 export default function RootLayout({
   children,
-}: Readonly<{
-  children: React.ReactNode;
-}>) {
+}: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className={inter.className}>
-        <Providers>{children}</Providers>
+      <body className={`${manrope.variable} `}>
+      <ReactQueryProvider>
+
+        <Providers>{children}
+
+        <ScrollToTop/>
+
+        </Providers>
+        </ReactQueryProvider>
+
       </body>
     </html>
   );

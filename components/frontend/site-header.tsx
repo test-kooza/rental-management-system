@@ -1,311 +1,208 @@
-"use client";
+"use client"
 
-import * as React from "react";
-import Link from "next/link";
-import { Button } from "@/components/ui/button";
-import {
-  NavigationMenu,
-  NavigationMenuContent,
-  NavigationMenuItem,
-  NavigationMenuLink,
-  NavigationMenuList,
-  NavigationMenuTrigger,
-} from "@/components/ui/navigation-menu";
-import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-  SheetTrigger,
-} from "@/components/ui/sheet";
-import {
-  Menu,
-  Users,
-  BarChart2,
-  FileText,
-  Layout,
-  CloudUpload,
-  Edit3,
-  Database,
-  BarChart,
-  Lock,
-} from "lucide-react";
-import { cn } from "@/lib/utils";
-import { ChevronDown } from "lucide-react";
+import { useState, useEffect, useRef } from "react"
+import Link from "next/link"
+import { motion, AnimatePresence } from "framer-motion"
+import { Search, Globe, Menu, X } from 'lucide-react'
+import { cn } from "@/lib/utils"
+import { UserNav } from "./userNav"
+import { SearchModal } from "./SearchModal"
+import { MobileSearch } from "./MobileSearch"
+import Image from "next/image"
+import Logo from "./Logo"
+import MobileCategoriesScroller from "./MobileScroller"
+import CategoryScroller from "./CategoryScroller"
+import { Session } from "next-auth"
 
-import Logo from "../global/Logo";
-import { Session } from "next-auth";
-import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
-import { getInitials } from "@/lib/generateInitials";
+interface SiteHeaderProps {
+  session?: Session | null;
+}
 
-const features = [
-  {
-    icon: Users,
-    title: "Advanced Authentication",
-    description:
-      "Secure and flexible authentication system with role-based access control and multi-provider support.",
-    href: "/features/authentication",
-  },
-  {
-    icon: Layout,
-    title: "Dynamic Dashboard",
-    description:
-      "Beautifully designed, responsive dashboard with data visualization and management tools.",
-    href: "/features/dashboard",
-  },
-  {
-    icon: FileText,
-    title: "Reusable Form Components",
-    description:
-      "Streamline your workflows with reusable and customizable form components.",
-    href: "/features/forms",
-  },
-  {
-    icon: BarChart2,
-    title: "Advanced Data Tables",
-    description:
-      "Manage and display data effortlessly with customizable and powerful data tables.",
-    href: "/features/data-tables",
-  },
-  {
-    icon: CloudUpload,
-    title: "Image Upload",
-    description:
-      "Effortless image uploads powered by UploadThing, supporting both single and multiple file uploads.",
-    href: "/features/image-upload",
-  },
-  {
-    icon: Edit3,
-    title: "Rich Text Editor",
-    description:
-      "Seamlessly create and edit rich content using an integrated Quill editor.",
-    href: "/features/rich-text-editor",
-  },
-  {
-    icon: Lock,
-    title: "Secure Authentication",
-    description:
-      "Role-based authentication system with customizable access control.",
-    href: "/features/secure-authentication",
-  },
-  {
-    icon: Database,
-    title: "Prisma ORM",
-    description:
-      "Leverage Prisma ORM for robust and scalable database management in TypeScript.",
-    href: "/features/prisma-orm",
-  },
-  {
-    icon: BarChart,
-    title: "Analytics Integration",
-    description:
-      "Track performance with integrated analytics from PostHog and Vercel for actionable insights.",
-    href: "/features/analytics",
-  },
-];
 
-export default function SiteHeader({ session }: { session: Session | null }) {
-  const [open, setOpen] = React.useState(false);
-  const [showFeatures, setShowFeatures] = React.useState(false);
+export default function SiteHeader({ session }: SiteHeaderProps) {
+  const [scrolled, setScrolled] = useState(false)
+  const [searchOpen, setSearchOpen] = useState(false)
+  const [mobileSearchOpen, setMobileSearchOpen] = useState(false)
+  const headerRef = useRef<HTMLDivElement>(null)
+  const scrollThreshold = 20
+  
+  // Add debounce to prevent rapid state changes
+  const debounce = (func: Function, wait: number) => {
+    let timeout: NodeJS.Timeout
+    return (...args: any) => {
+      clearTimeout(timeout)
+      timeout = setTimeout(() => func(...args), wait)
+    }
+  }
+
+  useEffect(() => {
+    if (window.scrollY > scrollThreshold) {
+      setScrolled(true)
+    }
+    
+    const handleScroll = () => {
+      requestAnimationFrame(() => {
+        if (window.scrollY > scrollThreshold) {
+          if (!scrolled) setScrolled(true)
+        } else {
+          if (scrolled) setScrolled(false)
+        }
+      })
+    }
+    
+    const debouncedHandleScroll = debounce(handleScroll, 10)
+    window.addEventListener("scroll", debouncedHandleScroll)
+    
+    return () => {
+      window.removeEventListener("scroll", debouncedHandleScroll)
+    }
+  }, [scrolled])
+
+  const expandedVariants = {
+    initial: { opacity: 0, y: -5 },
+    animate: { opacity: 1, y: 0 },
+    exit: { opacity: 0, y: -5 }
+  }
+  
+  const collapsedVariants = {
+    initial: { opacity: 0, y: 5 },
+    animate: { opacity: 1, y: 0 },
+    exit: { opacity: 0, y: 5 }
+  }
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 ">
-      <div className="container max-w-7xl mx-auto flex h-14 items-center justify-between">
-        <div className="flex items-center space-x-4">
-          <Logo />
-          <NavigationMenu className="hidden md:flex">
-            <NavigationMenuList>
-              <NavigationMenuItem>
-                <Link href="/" legacyBehavior passHref>
-                  <NavigationMenuLink className="group inline-flex h-9 w-max items-center justify-center rounded-md bg-background px-4 py-2 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground focus:outline-none disabled:pointer-events-none disabled:opacity-50 data-[active]:bg-accent/50 data-[state=open]:bg-accent/50">
-                    Home
-                  </NavigationMenuLink>
-                </Link>
-              </NavigationMenuItem>
-
-              <NavigationMenuItem>
-                <NavigationMenuTrigger>Features</NavigationMenuTrigger>
-                <NavigationMenuContent>
-                  <div className="w-[800px] p-4">
-                    <div className="flex items-center justify-between mb-4 pb-2 border-b">
-                      <h4 className="text-lg font-medium">Features</h4>
-                      <Link
-                        href="/features"
-                        className="text-sm text-blue-500 hover:underline"
-                      >
-                        View all
-                      </Link>
-                    </div>
-                    <div className="grid gap-4 md:grid-cols-3 ">
-                      {features.map((feature, index) => (
-                        <Link
-                          key={index}
-                          href={`/feature/${feature.title
-                            .toLowerCase()
-                            .replace(/\s+/g, "-")}`}
-                          className="block group"
-                        >
-                          <div className="flex items-start gap-4">
-                            <div className="p-2 bg-muted rounded-md group-hover:bg-muted/80">
-                              <feature.icon className="h-6 w-6 text-blue-500" />
-                            </div>
-                            <div>
-                              <h5 className="font-medium mb-1 group-hover:text-blue-500">
-                                {feature.title}
-                              </h5>
-                              <p className="text-sm text-muted-foreground line-clamp-2">
-                                {feature.description}
-                              </p>
-                            </div>
-                          </div>
-                        </Link>
-                      ))}
-                    </div>
-                    <div className="mt-6 pt-4 border-t">
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <h4 className="font-medium mb-1">Get started</h4>
-                          <p className="text-sm text-muted-foreground">
-                            Am really excited for all these features out of the
-                            box
-                          </p>
-                        </div>
-                        <Button asChild variant="secondary">
-                          <Link
-                            target="_blank"
-                            href="https://coding-school-typescript.vercel.app/give-away"
-                          >
-                            Get started
-                          </Link>
-                        </Button>
-                      </div>
-                    </div>
-                  </div>
-                </NavigationMenuContent>
-              </NavigationMenuItem>
-
-              <NavigationMenuItem>
-                <Link href="/#pricing" legacyBehavior passHref>
-                  <NavigationMenuLink className="group inline-flex h-9 w-max items-center justify-center rounded-md bg-background px-4 py-2 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground focus:outline-none disabled:pointer-events-none disabled:opacity-50 data-[active]:bg-accent/50 data-[state=open]:bg-accent/50">
-                    Pricing
-                  </NavigationMenuLink>
-                </Link>
-              </NavigationMenuItem>
-            </NavigationMenuList>
-          </NavigationMenu>
-        </div>
-        {session ? (
-          <Button asChild variant={"ghost"}>
-            <Link href="/dashboard">
-              <Avatar>
-                <AvatarImage
-                  src={session?.user?.image ?? ""}
-                  alt={session?.user?.name ?? ""}
-                />
-                <AvatarFallback>
-                  {getInitials(session?.user?.name)}
-                </AvatarFallback>
-              </Avatar>
-              <span className="ml-3">Dashboard</span>
-            </Link>
-          </Button>
-        ) : (
-          <div className="hidden md:flex items-center space-x-4">
-            <Button asChild variant="ghost">
-              <Link href={"/login"}>Log in</Link>
-            </Button>
-            <Button>
-              <Link href="/register">Signup</Link>
-            </Button>
-          </div>
+    <>
+      <header 
+        ref={headerRef}
+        className={cn(
+          "sticky top-0 z-50 w-full border-b transition-all duration-300 md:px-4 md:pt-4 bg-white flex flex-col",
+          scrolled ? "md:pb-4 shadow-sm" : "md:pb-24"
         )}
+      >
+        <div className="container mx-auto px-4 sm:px-6">
+          <div className="flex h-16 items-center justify-between">
+            {/* Logo */}
+            <div className="flex shrink-0 items-center">
+              <Logo/>
+            </div>
 
-        <Sheet open={open} onOpenChange={setOpen}>
-          <SheetTrigger asChild className="md:hidden">
-            <Button variant="ghost" size="icon">
-              <Menu className="h-5 w-5" />
-            </Button>
-          </SheetTrigger>
-          <SheetContent side="left" className="w-full p-0">
-            <SheetHeader className="border-b p-4">
-              <SheetTitle className="text-left">Navigation</SheetTitle>
-            </SheetHeader>
-            <div className="flex flex-col py-4">
-              <Link
-                href="/"
-                className="px-4 py-2 text-lg font-medium hover:bg-accent"
-                onClick={() => setOpen(false)}
-              >
-                Home
-              </Link>
-              <button
-                className="flex items-center justify-between px-4 py-2 text-lg font-medium hover:bg-accent text-left"
-                onClick={() => setShowFeatures(!showFeatures)}
-              >
-                Features
-                <ChevronDown
-                  className={cn(
-                    "h-5 w-5 transition-transform",
-                    showFeatures && "rotate-180"
-                  )}
-                />
-              </button>
-              {showFeatures && (
-                <div className="px-4 py-2 space-y-4">
-                  {features.map((feature, index) => (
-                    <Link
-                      key={index}
-                      href={`/feature/${feature.title
-                        .toLowerCase()
-                        .replace(/\s+/g, "-")}`}
-                      className="flex items-start gap-4 py-2"
-                      onClick={() => setOpen(false)}
+            {/* Desktop Navigation */}
+            <div className="hidden md:flex md:items-center md:justify-center">
+              <AnimatePresence mode="wait" initial={false}>
+                {!scrolled ? (
+                  <motion.div 
+                    key="expanded"
+                    variants={expandedVariants}
+                    initial="initial"
+                    animate="animate"
+                    exit="exit"
+                    transition={{ duration: 0.3, ease: "easeInOut" }}
+                    className="pt-24"
+                  >
+                    <div className="flex gap-6 items-center justify-center mb-4">
+                      <button className="font-bold">Homes</button>
+                      <button className="font-medium">Experiences</button>
+                    </div>
+                    <div className="relative">
+                      <div className="flex h-16 items-center rounded-full border shadow-2 bg-[#ffffff]">
+                        <div className="flex cursor-pointer flex-col border-r px-16">
+                          <span className="text-xs font-semibold">Where</span>
+                          <span className="text-sm text-muted-foreground">Search destinations</span>
+                        </div>
+                        <div className="flex cursor-pointer flex-col border-r px-6">
+                          <span className="text-xs font-semibold">Check in</span>
+                          <span className="text-sm text-muted-foreground">Add dates</span>
+                        </div>
+                        <div className="flex cursor-pointer flex-col border-r px-6">
+                          <span className="text-xs font-semibold">Check out</span>
+                          <span className="text-sm text-muted-foreground">Add dates</span>
+                        </div>
+                        <div className="flex cursor-pointer flex-col px-16">
+                          <span className="text-xs font-semibold">Who</span>
+                          <span className="text-sm text-muted-foreground">Add guests</span>
+                        </div>
+                        <button 
+                          className="ml-8 mr-4 flex h-12 w-12 items-center justify-center rounded-full bg-[#ff385c] text-white"
+                          onClick={() => setSearchOpen(true)}
+                        >
+                          <Search className="h-5 w-5" />
+                        </button>
+                      </div>
+                    </div>
+                  </motion.div>
+                ) : (
+                  <motion.div 
+                    key="collapsed"
+                    variants={collapsedVariants}
+                    initial="initial"
+                    animate="animate"
+                    exit="exit"
+                    transition={{ duration: 0.3, ease: "easeInOut" }}
+                    className="relative"
+                  >
+                    <div 
+                      className="flex h-14 items-center rounded-full border shadow-2 cursor-pointer"
+                      onClick={() => setSearchOpen(true)}
                     >
-                      <div className="p-2 bg-muted rounded-md">
-                        <feature.icon className="h-6 w-6 text-blue-500" />
+                      <div className="px-4 font-semibold text-sm">Anywhere</div>
+                      <div className="border-l border-r px-4 font-semibold text-sm">Any week</div>
+                      <div className="px-4 text-muted-foreground text-sm">Add guests</div>
+                      <div className="ml-2 mr-3 flex h-8 w-8 items-center justify-center rounded-full bg-[#ff385c] text-white">
+                        <Search className="h-4 w-4" />
                       </div>
-                      <div>
-                        <h5 className="font-medium mb-1">{feature.title}</h5>
-                        <p className="text-sm text-muted-foreground">
-                          {feature.description}
-                        </p>
-                      </div>
-                    </Link>
-                  ))}
-                </div>
-              )}
-              <Link
-                href="/#pricing"
-                className="px-4 py-2 text-lg font-medium hover:bg-accent"
-                onClick={() => setOpen(false)}
-              >
-                Pricing
-              </Link>
-              <Link
-                href="/how-it-works"
-                className="px-4 py-2 text-lg font-medium hover:bg-accent"
-                onClick={() => setOpen(false)}
-              >
-                How it works
-              </Link>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </div>
-            <div className="absolute bottom-0 left-0 right-0 p-4 border-t bg-background">
-              <div className="grid gap-2">
-                <Button
-                  variant="outline"
-                  className="w-full"
-                  onClick={() => setOpen(false)}
-                >
-                  Log in
-                </Button>
-                <Button className="w-full" onClick={() => setOpen(false)}>
-                  Sign up
-                </Button>
-              </div>
+
+            {/* Mobile Search Button */}
+            <div className="flex md:hidden flex-col">
+              <button 
+                onClick={() => setMobileSearchOpen(true)}
+                className="flex items-center w-full rounded-full border shadow-sm px-4 py-2"
+              >
+                <Search className="h-4 w-4 mr-2" />
+                <span className="text-sm text-gray-500">Start your search</span>
+              </button>
             </div>
-          </SheetContent>
-        </Sheet>
+
+            {/* Right Side Navigation */}
+            <div className="flex items-center">
+              <Link 
+                href="/become-host" 
+                className="hidden md:flex items-center rounded-full px-4 py-2 text-sm hover:bg-accent font-bold"
+              >
+                Switch to hosting
+              </Link>
+              <Link 
+                href="/become-host"  className="rounded-full p-2 hover:bg-accent">
+                <Globe className="h-5 w-5" />
+              </Link>
+              <UserNav session={session} />
+            </div>
+          </div>
+        </div>
+        <MobileCategoriesScroller/>
+      </header>
+      
+      <div className="sticky top-[14%] z-20 w-full transition-all duration-300 md:px-4  bg-white flex flex-col">
+        <CategoryScroller/>
       </div>
-    </header>
-  );
+      
+      {/* Search Modal */}
+      <AnimatePresence>
+        {searchOpen && (
+          <SearchModal onClose={() => setSearchOpen(false)} />
+        )}
+      </AnimatePresence>
+
+      {/* Mobile Search Modal */}
+      <AnimatePresence>
+        {mobileSearchOpen && (
+          <MobileSearch onClose={() => setMobileSearchOpen(false)} />
+        )}
+      </AnimatePresence>
+    </>
+  )
 }

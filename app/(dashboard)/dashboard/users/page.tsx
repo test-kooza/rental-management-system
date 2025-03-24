@@ -6,7 +6,7 @@ import { getAllUsers } from "@/actions/users";
 export default async function page() {
   const users = (await getAllUsers()) || [];
   return (
-    <div className="p-8">
+    <div className="p-2">
       <TableHeader
         title="Users"
         linkTitle="Add User"

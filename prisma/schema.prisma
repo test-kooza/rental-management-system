@@ -37,70 +37,343 @@ model Session {
   user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
-enum UserRole {
+// Roles for role-based access control
+enum SystemRole {
   USER
+  HOST
   ADMIN
-  SERVICE_PROVIDER
 }
 
-model Role {
-  id          String   @id @default(cuid())
-  displayName String // Human-readable name (e.g., "Store Manager")
-  roleName    String   @unique // System name (e.g., "store_manager")
-  description String?
-  permissions String[] // Array of permission strings
-  users       User[]   @relation("UserRoles")
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-
-  @@index([roleName])
+// Property vibes/styles
+enum PropertyStyle {
+  PEACEFUL
+  UNIQUE
+  FAMILY_FRIENDLY
+  STYLISH
+  CENTRAL
+  SPACIOUS
 }
 
 model User {
+  id                 String             @id @default(cuid())
+  name               String
+  email              String             @unique
+  emailVerified      DateTime?
+  image              String?
+  password           String?
+  status             Boolean            @default(true)
+  isVerified         Boolean            @default(false)
+  systemRole         SystemRole         @default(USER)
+  token              String?
+  stripeCustomerId   String?            @unique // For payment processing
+  accounts           Account[]
+  sessions           Session[]
+  properties         Property[] // Properties listed by this user (as host)
+  bookings           Booking[] // Bookings made by this user (as guest)
+  reviewsGiven       Review[]           @relation("ReviewAuthor")
+  reviewsReceived    Review[]           @relation("ReviewTarget")
+  messages           Message[] // Messages sent by this user
+  conversationUsers  Conversation[]     @relation("ConversationUsers")
+  hostNotifications  Notification[]     @relation("HostNotifications")
+  guestNotifications Notification[]     @relation("GuestNotifications")
+  wishlist           Wishlist?
+  hostPayouts        Payout[]
+  categories         PropertyCategory[] // Categories created by this user
+  createdAt          DateTime           @default(now())
+  updatedAt          DateTime           @updatedAt
+  blogs              Blog[]
+  Review             Review[]
+  Conversation       Conversation?      @relation(fields: [conversationId], references: [id])
+  conversationId     String?
+  Notification       Notification[]
+}
+
+model PropertyCategory {
+  id          String     @id @default(cuid())
+  name        String     @unique
+  description String?    @db.Text
+  icon        String?
+  slug        String     @unique
+  isActive    Boolean    @default(true)
+  createdById String
+  createdBy   User       @relation(fields: [createdById], references: [id])
+  properties  Property[] // One PropertyCategory has many Properties
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+}
+
+model Property {
+  id               String           @id @default(cuid())
+  title            String
+  slug             String           @unique
+  description      String           @db.Text
+  shortDescription String?          @db.Text
+  propertyStyle    PropertyStyle[]
+  categoryId       String
+  category         PropertyCategory @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  hostId           String
+  host             User             @relation(fields: [hostId], references: [id], onDelete: Cascade)
+  address          Address?
+  images           String[]
+  rooms            Room[]
+  amenities        Json
+  pricing          Pricing?
+  bookings         Booking[]
+  reviews          Review[]         @relation("PropertyReviews")
+  maxGuests        Int
+  bedrooms         Int
+  beds             Int
+  bathrooms        Decimal
+  isPublished      Boolean          @default(false)
+  isFeatured       Boolean          @default(false)
+  isAvailable      Boolean          @default(true)
+  bookingSettings  BookingSettings?
+  // availabilities   Availability[]
+  avgRating        Decimal?         @db.Decimal(3, 2)
+  reviewCount      Int              @default(0)
+  viewCount        Int              @default(0)
+  createdAt        DateTime         @default(now())
+  updatedAt        DateTime         @updatedAt
+}
+
+// Room model
+model Room {
+  id          String   @id @default(cuid())
+  title       String
+  description String?  @db.Text
+  propertyId  String
+  property    Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+  roomType    String // Master bedroom, Guest room, Living room, etc.
+  beds        Int      @default(1)
+  bedType     String? // King, Queen, Twin, etc.
+  maxGuests   Int      @default(2)
+  images      String[]
+  amenities   String[] // Array of amenities specific to this room
+  isPrivate   Boolean  @default(true)
+  hasEnsuite  Boolean  @default(false)
+  floorLevel  Int?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Address {
+  id               String   @id @default(cuid())
+  propertyId       String   @unique
+  property         Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+  street           String
+  city             String
+  state            String?
+  postalCode       String?
+  country          String
+  latitude         Decimal? @db.Decimal(10, 8)
+  longitude        Decimal? @db.Decimal(11, 8)
+  placeId          String? // For Google Maps integration
+  formattedAddress String?
+  neighborhood     String? // Neighborhood or area name
+  isExactLocation  Boolean  @default(true) // Whether to show exact location or approximate
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+}
+
+model Pricing {
+  id              String   @id @default(cuid())
+  propertyId      String   @unique
+  property        Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+  basePrice       Decimal  @db.Decimal(10, 2) // Base nightly rate
+  cleaningFee     Decimal? @db.Decimal(10, 2)
+  serviceFee      Decimal? @db.Decimal(10, 2)
+  taxRate         Decimal? @db.Decimal(5, 2) // Tax percentage
+  weeklyDiscount  Decimal? @db.Decimal(5, 2) // Percentage discount
+  monthlyDiscount Decimal? @db.Decimal(5, 2) // Percentage discount
+  currency        String   @default("USD")
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
+
+model BookingSettings {
+  id                   String   @id @default(cuid())
+  propertyId           String   @unique
+  property             Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+  instantBooking       Boolean  @default(false) // Allow instant booking without host approval
+  minStay              Int      @default(1) // Minimum nights
+  maxStay              Int? // Maximum nights (if any)
+  checkInTime          String   @default("15:00") // Default check-in time
+  checkOutTime         String   @default("11:00") // Default check-out time
+  allowChildren        Boolean  @default(true)
+  allowInfants         Boolean  @default(true)
+  allowPets            Boolean  @default(false)
+  allowSmoking         Boolean  @default(false)
+  allowParties         Boolean  @default(false)
+  cancellationPolicy   String   @default("MODERATE") // FLEXIBLE, MODERATE, STRICT
+  advanceBookingWindow Int      @default(365) // How many days in advance can be booked
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
+}
+
+// model Availability {
+//   id          String   @id @default(cuid())
+//   propertyId  String
+//   property    Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+//   date        DateTime // The specific date
+//   isAvailable Boolean  @default(true)
+//   isBlocked   Boolean  @default(false) // Blocked by host
+//   createdAt   DateTime @default(now())
+//   updatedAt   DateTime @updatedAt
+
+//   @@unique([propertyId, date]) // Each date can only have one availability record per property
+// }
+
+enum BookingStatus {
+  PENDING
+  CONFIRMED
+  CANCELLED
+  COMPLETED
+  DECLINED
+}
+
+model Booking {
+  id                 String        @id @default(cuid())
+  bookingNumber      String        @unique // For easier reference by users (e.g., "BK123456")
+  guestId            String
+  guest              User          @relation(fields: [guestId], references: [id], onDelete: Cascade)
+  propertyId         String
+  property           Property      @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+  status             BookingStatus @default(PENDING)
+  checkInDate        DateTime
+  checkOutDate       DateTime
+  adults             Int           @default(1)
+  children           Int           @default(0)
+  infants            Int           @default(0)
+  pets               Int           @default(0)
+  basePrice          Decimal       @db.Decimal(10, 2)
+  cleaningFee        Decimal?      @db.Decimal(10, 2)
+  serviceFee         Decimal?      @db.Decimal(10, 2)
+  taxAmount          Decimal?      @db.Decimal(10, 2)
+  totalAmount        Decimal       @db.Decimal(10, 2)
+  currency           String        @default("USD")
+  hostNote           String?       @db.Text // Private note for host
+  guestNote          String?       @db.Text // Special requests from guest
+  stripePaymentId    String?
+  stripeRefundId     String?
+  confirmationCode   String? // For guest check-in
+  cancellationReason String?
+  conversation       Conversation? @relation(fields: [conversationId], references: [id])
+  conversationId     String?
+  guestReview        Review?       @relation("GuestBookingReview")
+  hostReview         Review?       @relation("HostBookingReview")
+  createdAt          DateTime      @default(now())
+  updatedAt          DateTime      @updatedAt
+}
+
+model Review {
   id            String    @id @default(cuid())
-  name          String
-  firstName     String
-  lastName      String
-  phone         String    @unique
-  email         String    @unique
-  emailVerified DateTime?
-  image         String?
-  jobTitle      String?
-  roles         Role[]    @relation("UserRoles") // Updated to support multiple roles
-  // role          UserRole  @default(USER)
-  password      String?
-  status        Boolean   @default(true)
-  accounts      Account[]
-  sessions      Session[]
-  savings       Saving[]
-  blogs         Blog[]
-  isVerfied     Boolean   @default(false)
-  token         String?
+  rating        Int // 1-5 stars
+  comment       String?   @db.Text
+  authorId      String // Who wrote the review
+  author        User      @relation("ReviewAuthor", fields: [authorId], references: [id])
+  targetUserId  String? // User being reviewed (if user review)
+  targetUser    User?     @relation("ReviewTarget", fields: [targetUserId], references: [id])
+  propertyId    String? // Property being reviewed
+  property      Property? @relation("PropertyReviews", fields: [propertyId], references: [id])
+  bookingId     String?   @unique
+  guestBooking  Booking?  @relation("GuestBookingReview", fields: [bookingId], references: [id])
+  hostBookingId String?   @unique
+  hostBooking   Booking?  @relation("HostBookingReview", fields: [hostBookingId], references: [id])
+  cleanliness   Int? // Property specific ratings
+  accuracy      Int?
+  communication Int?
+  location      Int?
+  checkIn       Int?
+  value         Int?
+  isPublished   Boolean   @default(true)
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
-  roleId        String?
+  User          User?     @relation(fields: [userId], references: [id])
+  userId        String?
 }
 
-model Category {
+model Conversation {
+  id        String    @id @default(cuid())
+  bookings  Booking[]
+  users     User[]    @relation("ConversationUsers")
+  messages  Message[]
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  User      User[]
+}
+
+model Message {
+  id             String       @id @default(cuid())
+  conversationId String
+  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  senderId       String
+  sender         User         @relation(fields: [senderId], references: [id], onDelete: Cascade)
+  content        String       @db.Text
+  isRead         Boolean      @default(false)
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+}
+
+enum NotificationType {
+  BOOKING_REQUEST
+  BOOKING_CONFIRMED
+  BOOKING_CANCELLED
+  MESSAGE_RECEIVED
+  REVIEW_RECEIVED
+  PAYOUT_SENT
+  PAYMENT_PROCESSED
+  SYSTEM_UPDATE
+}
+
+model Notification {
+  id        String           @id @default(cuid())
+  type      NotificationType
+  title     String
+  message   String           @db.Text
+  isRead    Boolean          @default(false)
+  hostId    String?
+  host      User?            @relation("HostNotifications", fields: [hostId], references: [id])
+  guestId   String?
+  guest     User?            @relation("GuestNotifications", fields: [guestId], references: [id])
+  bookingId String?
+  entityId  String? // ID of related entity (property, review, etc.)
+  createdAt DateTime         @default(now())
+  updatedAt DateTime         @updatedAt
+  User      User?            @relation(fields: [userId], references: [id])
+  userId    String?
+}
+
+model Wishlist {
+  id         String   @id @default(cuid())
+  userId     String   @unique
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  properties String[] // Array of property IDs
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+}
+
+model Payout {
   id          String    @id @default(cuid())
-  title       String
-  slug        String    @unique
-  imageUrl    String?
+  hostId      String
+  host        User      @relation(fields: [hostId], references: [id], onDelete: Cascade)
+  amount      Decimal   @db.Decimal(10, 2)
+  currency    String    @default("USD")
+  status      String    @default("PENDING") // PENDING, COMPLETED, FAILED
+  stripeId    String? // Stripe payout ID
   description String?
+  periodStart DateTime?
+  periodEnd   DateTime?
   createdAt   DateTime  @default(now())
-  updatedAt   DateTime? @updatedAt
+  updatedAt   DateTime  @updatedAt
 }
 
-model Saving {
-  id          String    @id @default(cuid())
-  amount      Int
-  month       String
-  name        String
-  userId      String
-  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-  paymentDate DateTime  @default(now())
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime? @updatedAt
+model BlogCategory {
+  id        String   @id @default(cuid())
+  name      String   @unique
+  slug      String   @unique
+  blogs     Blog[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 model Blog {
@@ -112,8 +385,8 @@ model Blog {
   content       String?      @db.Text
   published     Boolean?     @default(false)
   featured      Boolean?     @default(false)
-  author        User         @relation(fields: [authorId], references: [id])
   authorId      String
+  author        User         @relation(fields: [authorId], references: [id])
   authorName    String
   authorImage   String?
   authorTitle   String?
@@ -123,13 +396,4 @@ model Blog {
   readingTime   Int? // Estimated reading time in minutes
   createdAt     DateTime     @default(now())
   updatedAt     DateTime     @updatedAt
-}
-
-model BlogCategory {
-  id        String   @id @default(cuid())
-  name      String   @unique
-  slug      String   @unique
-  blogs     Blog[]
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
 }

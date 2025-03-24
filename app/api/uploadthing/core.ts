@@ -12,6 +12,18 @@ export const ourFileRouter = {
       return { uploadedBy: "JB" };
     }
   ),
+  propertyImages: f({ image: { maxFileSize: "8MB", maxFileCount: 6 } }).onUploadComplete(
+    async ({ metadata, file }) => {
+      console.log("file url", file.url);
+      return { uploadedBy: "COLLINZ" };
+    }
+  ),
+  roomImage: f({ image: { maxFileSize: "8MB", maxFileCount: 4 } }).onUploadComplete(
+    async ({ metadata, file }) => {
+      console.log("file url", file.url);
+      return { uploadedBy: "COLLINZ" };
+    }
+  ),
   blogImage: f({ image: { maxFileSize: "1MB" } }).onUploadComplete(
     async ({ metadata, file }) => {
       console.log("file url", file.url);

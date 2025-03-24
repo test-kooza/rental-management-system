@@ -11,91 +11,43 @@ import { generateToken } from "@/lib/token";
 const resend = new Resend(process.env.RESEND_API_KEY);
 const baseUrl = process.env.NEXT_PUBLIC_BASE_URL;
 
-const DEFAULT_USER_ROLE = {
-  displayName: "User",
-  roleName: "user",
-  description: "Default user role with basic permissions",
-  permissions: [
-    "dashboard.read",
-    "profile.read",
-    "profile.update",
-    "orders.read",
-  ],
-};
 
 export async function createUser(data: UserProps) {
-  const { email, password, firstName, lastName, name, phone, image } = data;
+  const { email, password, name, image } = data;
 
   try {
-    // Use a transaction for atomic operations
-    return await db.$transaction(async (tx) => {
-      // Check for existing users
-      const existingUserByEmail = await tx.user.findUnique({
-        where: { email },
-      });
-
-      const existingUserByPhone = await tx.user.findUnique({
-        where: { phone },
-      });
-
-      if (existingUserByEmail) {
-        return {
-          error: `This email ${email} is already in use`,
-          status: 409,
-          data: null,
-        };
-      }
-
-      if (existingUserByPhone) {
-        return {
-          error: `This Phone number ${phone} is already in use`,
-          status: 409,
-          data: null,
-        };
-      }
-
-      // Find or create default role
-      let defaultRole = await tx.role.findFirst({
-        where: { roleName: DEFAULT_USER_ROLE.roleName },
-      });
-
-      // Create default role if it doesn't exist
-      if (!defaultRole) {
-        defaultRole = await tx.role.create({
-          data: DEFAULT_USER_ROLE,
-        });
-      }
-
-      // Hash password
-      const hashedPassword = await bcrypt.hash(password, 10);
-
-      // Create user with role
-      const newUser = await tx.user.create({
-        data: {
-          email,
-          password: hashedPassword,
-          firstName,
-          lastName,
-          name,
-          phone,
-          image,
-          roles: {
-            connect: {
-              id: defaultRole.id,
-            },
-          },
-        },
-        include: {
-          roles: true, // Include roles in the response
-        },
-      });
-
-      return {
-        error: null,
-        status: 200,
-        data: newUser,
-      };
+    // Check for existing user by email
+    const existingUserByEmail = await db.user.findUnique({
+      where: { email },
     });
+
+    if (existingUserByEmail) {
+      return {
+        error: `This email ${email} is already in use`,
+        status: 409,
+        data: null,
+      };
+    }
+
+    // Hash password
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    // Create user
+    const newUser = await db.user.create({
+      data: {
+        email,
+        password: hashedPassword,
+        name,
+        image,
+        systemRole: "USER",
+      },
+    });
+
+    return {
+      error: null,
+      status: 200,
+      data: newUser,
+    };
   } catch (error) {
     console.error("Error creating user:", error);
     return {
@@ -125,9 +77,7 @@ export async function getAllUsers() {
       orderBy: {
         createdAt: "desc",
       },
-      include: {
-        roles: true,
-      },
+     
     });
     return users;
   } catch (error) {
@@ -188,7 +138,7 @@ export async function sendResetLink(email: string) {
         token,
       },
     });
-    const userFirstname = user.firstName;
+    const userFirstname = user.name;
 
     const resetPasswordLink = `${baseUrl}/reset-password?token=${token}&&email=${email}`;
     const { data, error } = await resend.emails.send({

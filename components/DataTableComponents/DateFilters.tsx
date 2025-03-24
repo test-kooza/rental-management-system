@@ -3,8 +3,56 @@
 import React, { useState } from "react";
 import Select from "react-tailwindcss-select";
 import { SelectValue } from "react-tailwindcss-select/dist/components/type";
-import { months } from "../Forms/SavingForm";
-
+export const months = [
+  {
+    label: "January",
+    value: "JANUARY",
+  },
+  {
+    label: "February",
+    value: "FEBRUARY",
+  },
+  {
+    label: "March",
+    value: "MARCH",
+  },
+  {
+    label: "April",
+    value: "APRIL",
+  },
+  {
+    label: "May",
+    value: "MAY",
+  },
+  {
+    label: "June",
+    value: "JUNE",
+  },
+  {
+    label: "July",
+    value: "JULY",
+  },
+  {
+    label: "August",
+    value: "AUGUST",
+  },
+  {
+    label: "September",
+    value: "SEPTEMBER",
+  },
+  {
+    label: "October",
+    value: "OCTOBER",
+  },
+  {
+    label: "November",
+    value: "NOVEMBER",
+  },
+  {
+    label: "December",
+    value: "DECEMBER",
+  },
+];
 export default function DateFilters({
   data,
   onFilter,

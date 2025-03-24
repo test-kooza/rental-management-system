@@ -11,15 +11,15 @@ export default async function DashboardLayout({
   children: ReactNode;
 }) {
   const session = await getServerSession(authOptions);
-  if (!session) {
-    redirect("/login");
-  }
+     if (!session?.user) {
+            redirect("/login?returnUrl=/dashboard");
+          }
   return (
     <div className="min-h-screen w-full">
       <Sidebar session={session} />
       <div className="md:ml-[220px] lg:ml-[280px]">
         <Navbar session={session} />
-        <div className="p-8">{children}</div>
+        <div className="p-2">{children}</div>
       </div>
     </div>
   );

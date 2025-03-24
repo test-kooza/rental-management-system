@@ -1,10 +1,9 @@
 // "use client";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { AnalyticsProps } from "@/actions/analytics";
 import Link from "next/link";
 
-export default function OverViewCard({ item }: { item: AnalyticsProps }) {
+export default function OverViewCard({ item }: { item: any }) {
   const Icon = item.icon;
   return (
     <Card>

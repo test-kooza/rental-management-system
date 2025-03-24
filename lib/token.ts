@@ -1,12 +1,18 @@
-export function generateToken(): string {
-  const chars = "abcdefghijklmnopqrstuvwxyz0123456789";
+
+import { randomBytes } from "crypto";
+
+export function generateToken(length: number = 32): string {
+  return randomBytes(length).toString("hex");
+}
+
+export function generateNumericToken(length: number = 6): string {
+  const digits = "0123456789";
   let token = "";
-
-  // Generate 32 random characters
-  for (let i = 0; i < 32; i++) {
-    const randomIndex = Math.floor(Math.random() * chars.length);
-    token += chars[randomIndex];
+  
+  for (let i = 0; i < length; i++) {
+    const randomIndex = Math.floor(Math.random() * digits.length);
+    token += digits[randomIndex];
   }
-
+  
   return token;
 }

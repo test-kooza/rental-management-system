@@ -1,4 +1,5 @@
 import LoginForm from "@/components/Forms/LoginForm";
+import AuthHeader from "@/components/frontend/AuthHeader";
 import { GridBackground } from "@/components/reusable-ui/grid-background";
 import { authOptions } from "@/config/auth";
 import { getServerSession } from "next-auth";
@@ -12,6 +13,7 @@ export default async function page() {
   }
   return (
     <GridBackground>
+        <AuthHeader/>
       <div className="px-4">
         <LoginForm />
       </div>

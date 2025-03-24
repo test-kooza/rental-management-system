@@ -15,10 +15,10 @@ export default function ImageColumn({
     <div className="shrink-0">
       <Image
         alt={`${accessorKey}`}
-        className="aspect-square rounded-md object-cover"
-        height="50"
+        className=" rounded-full object-cover"
+        height="30"
         src={imageUrl ?? "/placeholder.png"}
-        width="50"
+        width="30"
       />
     </div>
   );
