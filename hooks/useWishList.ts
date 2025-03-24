@@ -113,7 +113,7 @@ export function useWishlist() {
         false
       )
       
-      toast.error("Failed to add to wishlist")
+      toast.error("Login First | Check Your Connection")
     }
   })
 
