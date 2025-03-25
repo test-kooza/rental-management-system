@@ -54,7 +54,7 @@ export async function addToWishlist(propertyId: string) {
     return { success: true, data: wishlist }
   } catch (error) {
     console.error("Error adding to wishlist:", error)
-    return { success: false, error: "Failed to add property to wishlist" }
+    return { success: false, error: "Login First" }
   }
 }
 

@@ -52,12 +52,10 @@ export function useWishlist() {
         throw new Error(result.error || "Failed to fetch wishlist")
       }
       
-      // Process the data to ensure all properties have the right format
       return result.data || []
     }
   })
   
-  // Additional normalization to ensure values are in the right format
   const wishlistProperties = wishlistPropertiesRaw.map((property: any) => ({
     ...property,
     pricing: property.pricing ? {
@@ -67,21 +65,17 @@ export function useWishlist() {
     avgRating: property.avgRating ? Number(property.avgRating) : 0
   }))
 
-  // Check if a property is in wishlist
   const checkWishlistStatus = async (propertyId: string) => {
     const result = await isPropertyInWishlist(propertyId)
     return result.isInWishlist
   }
 
-  // Add to wishlist mutation
   const addToWishlistMutation = useMutation({
     mutationFn: addToWishlist,
     onMutate: async (propertyId) => {
-      // Cancel any outgoing refetches
       await queryClient.cancelQueries({ queryKey: ["wishlist"] })
       await queryClient.cancelQueries({ queryKey: ["wishlistStatus", propertyId] })
 
-      // Set optimistic update for wishlist status
       queryClient.setQueryData(
         ["wishlistStatus", propertyId],
         true
@@ -198,10 +192,10 @@ export function useWishlist() {
       toggleWishlist: () => {
         if (isInWishlist) {
           removeFromWishlistMutation.mutate(propertyId)
-          setIsInWishlist(false) // Optimistic update
+          setIsInWishlist(false) 
         } else {
           addToWishlistMutation.mutate(propertyId)
-          setIsInWishlist(true) // Optimistic update
+          setIsInWishlist(true) 
         }
       }
     }

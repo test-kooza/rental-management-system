@@ -4,8 +4,8 @@ import { useState, useRef } from "react"
 import { Heart, ChevronLeft, ChevronRight } from "lucide-react"
 import { motion, AnimatePresence } from "framer-motion"
 import Link from "next/link"
-import { useRouter } from "next/navigation"
 import { useWishlist } from "@/hooks/useWishList"
+
 
 export interface PropertyImage {
   url: string
@@ -46,7 +46,6 @@ export const PropertyCard: React.FC<PropertyCardProps> = ({
   const [currentImageIndex, setCurrentImageIndex] = useState(0)
   const [showControls, setShowControls] = useState(false)
   const carouselRef = useRef<HTMLDivElement>(null)
-  const router = useRouter()
 
   const { usePropertyWishlistStatus } = useWishlist()
   const { isInWishlist, isLoading: isWishlistStatusLoading, toggleWishlist } = usePropertyWishlistStatus(id)
@@ -196,7 +195,7 @@ export const PropertyCard: React.FC<PropertyCardProps> = ({
             {location}, {country}
           </h3>
           <div className="flex items-center">
-            <span className="text-sm ml-1 text-black">★ {rating.toFixed(2)}</span>
+            <span className="text-sm ml-1 text-yellow-500">★ {rating.toFixed(2)}</span>
           </div>
         </div>
         <p className="text-gray-700 text-sm">Hosted by {host}</p>
