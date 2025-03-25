@@ -195,7 +195,7 @@ export const PropertyCard: React.FC<PropertyCardProps> = ({
             {location}, {country}
           </h3>
           <div className="flex items-center">
-            <span className="text-sm ml-1 text-yellow-500">★ {rating.toFixed(2)}</span>
+            <span className="text-sm ml-1 text-primary">★ {rating.toFixed(2)}</span>
           </div>
         </div>
         <p className="text-gray-700 text-sm">Hosted by {host}</p>
