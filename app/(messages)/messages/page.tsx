@@ -12,9 +12,9 @@ export const metadata = {
 
 export default async function MessagesPage() {
   const { data: conversations, success } = await getUserConversations()
-
+  
   return (
-    <div className="flex flex-col h-[calc(100vh-4rem)]">
+    <div className="flex flex-col h-full">
       <div className="flex-1 overflow-hidden flex">
         <div className="w-full md:w-1/3 border-r block lg:hidden">
           <div className="p-4 border-b">
@@ -39,8 +39,6 @@ export default async function MessagesPage() {
         </div>
       </div>
       <MobileFooter/>
-
     </div>
   )
 }
-

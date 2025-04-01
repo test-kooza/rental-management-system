@@ -6,6 +6,7 @@ import { MessageSquare } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { startConversationWithHost } from "@/actions/messaging"
 import toast from "react-hot-toast"
+import { useSession } from "next-auth/react"
 
 interface MessageButtonProps {
   hostId: string
@@ -23,25 +24,35 @@ export function MessageButton({
 }: MessageButtonProps) {
   const router = useRouter()
   const [isLoading, setIsLoading] = useState(false)
-
+  const { data: session } = useSession();
+  
+  const user = session?.user;
+  
   const handleClick = async () => {
+    if (!user) {
+      router.push(`/login?returnUrl=/`);
+      return;
+    }
+  
     try {
-      setIsLoading(true)
-
-      const result = await startConversationWithHost(hostId, propertyId, "Hi, I'm interested in your property.")
-
+      setIsLoading(true);
+  
+      const result = await startConversationWithHost(hostId, propertyId, "Hi, I'm interested in your property.");
+  
       if (result.success && result.data) {
-        router.push(`/messages/${result.data.conversationId}`)
+        router.push(`/messages/${result.data.conversationId}`);
       } else {
-        toast.error(` ${result.error} || Failed to start conversation`)
+        // If the API request fails, handle it gracefully
+        toast.error(result.error || "Failed to start conversation");
       }
     } catch (error) {
-      console.error("Error starting conversation:", error)
-      toast.error("Failed to start conversation")
+      console.error("Error starting conversation:", error);
+      toast.error("Failed to start conversation");
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }
+  };
+  
 
   return (
     <Button size={size} className={`gap-1 bg-primary ${className}`} onClick={handleClick} disabled={isLoading}>
